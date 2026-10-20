@@ -1,0 +1,251 @@
+openapi: 3.0.3
+info:
+  title: StyleMatch API
+  version: 0.1.0
+  description: API contract for the StyleMatch virtual wardrobe MVP.
+servers:
+  - url: http://localhost:8000
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                required: [status]
+  /api/clothing:
+    get:
+      summary: List clothing items
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: category
+          schema: { $ref: "#/components/schemas/ClothingCategory" }
+        - in: query
+          name: color
+          schema: { type: string }
+        - in: query
+          name: season
+          schema: { $ref: "#/components/schemas/Season" }
+        - in: query
+          name: occasion
+          schema: { $ref: "#/components/schemas/Occasion" }
+      responses:
+        "200":
+          description: Clothing list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ClothingItem" }
+    post:
+      summary: Create clothing item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClothingItemCreate" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClothingItem" }
+        "422": { description: Validation error }
+  /api/clothing/{item_id}:
+    parameters:
+      - in: path
+        name: item_id
+        required: true
+        schema: { type: integer, minimum: 1 }
+    get:
+      summary: Get clothing item
+      responses:
+        "200":
+          description: Clothing item
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClothingItem" }
+        "404": { description: Not found }
+    patch:
+      summary: Update clothing item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClothingItemUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClothingItem" }
+        "404": { description: Not found }
+        "422": { description: Validation error }
+    delete:
+      summary: Delete clothing item
+      responses:
+        "204": { description: Deleted }
+        "404": { description: Not found }
+  /api/outfits:
+    get:
+      summary: List saved outfits
+      responses:
+        "200":
+          description: Outfit list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Outfit" }
+    post:
+      summary: Create outfit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OutfitCreate" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Outfit" }
+        "404": { description: A selected clothing item does not exist }
+        "422": { description: Validation error }
+  /api/outfits/{outfit_id}:
+    parameters:
+      - in: path
+        name: outfit_id
+        required: true
+        schema: { type: integer, minimum: 1 }
+    get:
+      summary: Get outfit
+      responses:
+        "200":
+          description: Outfit details
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Outfit" }
+        "404": { description: Not found }
+    delete:
+      summary: Delete outfit
+      responses:
+        "204": { description: Deleted }
+        "404": { description: Not found }
+  /api/outfits/generate:
+    post:
+      summary: Generate rule-based outfit suggestions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RecommendationRequest" }
+      responses:
+        "200":
+          description: Recommendations
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Recommendation" }
+  /api/dashboard/summary:
+    get:
+      summary: Dashboard statistics
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardSummary" }
+components:
+  schemas:
+    ClothingCategory:
+      type: string
+      enum: [top, bottom, shoes, accessory, outerwear]
+    Season:
+      type: string
+      enum: [spring, summer, autumn, winter, all-season]
+    Occasion:
+      type: string
+      enum: [casual, university, work, formal, party]
+    ClothingItemCreate:
+      type: object
+      required: [name, category, color, season, occasions]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        category: { $ref: "#/components/schemas/ClothingCategory" }
+        color: { type: string, minLength: 1, maxLength: 40 }
+        season: { $ref: "#/components/schemas/Season" }
+        occasions:
+          type: array
+          items: { $ref: "#/components/schemas/Occasion" }
+        image_url: { type: string, format: uri, nullable: true }
+    ClothingItemUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        category: { $ref: "#/components/schemas/ClothingCategory" }
+        color: { type: string, minLength: 1, maxLength: 40 }
+        season: { $ref: "#/components/schemas/Season" }
+        occasions:
+          type: array
+          items: { $ref: "#/components/schemas/Occasion" }
+        image_url: { type: string, format: uri, nullable: true }
+    ClothingItem:
+      allOf:
+        - $ref: "#/components/schemas/ClothingItemCreate"
+        - type: object
+          required: [id]
+          properties:
+            id: { type: integer }
+    OutfitCreate:
+      type: object
+      required: [name, occasion, season, clothing_item_ids]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        occasion: { $ref: "#/components/schemas/Occasion" }
+        season: { $ref: "#/components/schemas/Season" }
+        clothing_item_ids:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { type: integer, minimum: 1 }
+    Outfit:
+      allOf:
+        - $ref: "#/components/schemas/OutfitCreate"
+        - type: object
+          required: [id]
+          properties:
+            id: { type: integer }
+    RecommendationRequest:
+      type: object
+      properties:
+        occasion: { $ref: "#/components/schemas/Occasion" }
+        season: { $ref: "#/components/schemas/Season" }
+        limit: { type: integer, minimum: 1, maximum: 20, default: 5 }
+    Recommendation:
+      type: object
+      required: [clothing_item_ids, explanation]
+      properties:
+        clothing_item_ids:
+          type: array
+          items: { type: integer }
+        explanation: { type: string }
+    DashboardSummary:
+      type: object
+      required: [clothing_count, outfit_count, category_counts]
+      properties:
+        clothing_count: { type: integer }
+        outfit_count: { type: integer }
+        category_counts:
+          type: object
+          additionalProperties: { type: integer }

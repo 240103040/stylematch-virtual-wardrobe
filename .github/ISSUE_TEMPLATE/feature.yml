@@ -1,0 +1,32 @@
+name: Feature / MVP task
+description: Track a StyleMatch feature
+title: "[MVP] "
+labels: ["mvp"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What user outcome should this issue deliver?
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Scope and expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Observable conditions for completion
+      value: "- [ ] "
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Test Cases
+      description: What should QA verify?

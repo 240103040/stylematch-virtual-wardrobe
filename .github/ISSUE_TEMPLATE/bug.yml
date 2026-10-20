@@ -1,0 +1,38 @@
+name: User-test bug
+description: Record a bug found while testing the running app
+title: "[User Test Bug] "
+labels: ["user-test-bug"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should work for the user?
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description and reproduction steps
+      description: Include numbered steps
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: Browser, OS, commit, frontend/backend versions
+    validations:
+      required: true
