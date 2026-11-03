@@ -8,7 +8,7 @@ export interface WardrobeService {
   addOutfit(input: Omit<Outfit, 'id'>): Promise<Outfit>;
   generate(occasion?: Occasion, season?: Season): Promise<{ clothing_item_ids: number[]; explanation: string }[]>;
 }
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API}${path}`, { ...init, headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) } });
   if (!response.ok) { const body = await response.json().catch(() => ({})); throw new Error(body.detail || `Request failed (${response.status})`); }

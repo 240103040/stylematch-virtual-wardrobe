@@ -1,0 +1,31 @@
+# Stage 1: Build React frontend
+FROM node:22-alpine AS frontend-build
+
+WORKDIR /app/frontend
+
+COPY frontend/package*.json ./
+RUN npm install
+
+COPY frontend/ ./
+
+ARG VITE_API_URL=""
+ENV VITE_API_URL=${VITE_API_URL}
+
+RUN npm run build
+
+# Stage 2: Run FastAPI backend
+FROM python:3.12-slim
+
+WORKDIR /app/backend
+
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY backend/ ./
+
+# Copy built React files into the backend image
+COPY --from=frontend-build /app/frontend/dist /app/static
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

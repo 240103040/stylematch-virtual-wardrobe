@@ -4,6 +4,9 @@ from fastapi import Depends, FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
+from pathlib import Path
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .database import Base, engine, get_db
 from .models import ClothingItem, Outfit, OutfitItem
@@ -323,3 +326,25 @@ def dashboard_summary(db: Session = Depends(get_db)):
         outfit_count=len(outfits),
         category_counts=counts,
     )
+# Serve React frontend
+STATIC_DIR = Path(__file__).resolve().parent.parent.parent / "static"
+
+if (STATIC_DIR / "assets").exists():
+    app.mount(
+        "/assets",
+        StaticFiles(directory=STATIC_DIR / "assets"),
+        name="assets",
+    )
+
+
+@app.get("/", include_in_schema=False)
+def frontend_home():
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+def frontend_fallback(full_path: str):
+    if full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="Not found")
+
+    return FileResponse(STATIC_DIR / "index.html")

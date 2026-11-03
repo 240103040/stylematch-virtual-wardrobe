@@ -1,0 +1,66 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: stylematch-db
+    environment:
+      POSTGRES_DB: stylematch
+      POSTGRES_USER: stylematch
+      POSTGRES_PASSWORD: stylematch_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stylematch -d stylematch"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stylematch-app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://stylematch:stylematch_password@db:5432/stylematch
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  services:
+  db:
+    image: postgres:16-alpine
+    container_name: stylematch-db
+    environment:
+      POSTGRES_DB: stylematch
+      POSTGRES_USER: stylematch
+      POSTGRES_PASSWORD: stylematch_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stylematch -d stylematch"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stylematch-app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://stylematch:stylematch_password@db:5432/stylematch
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
