@@ -1,0 +1,74 @@
+
+name: Promote to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_deployment:
+        description: "Confirm promotion to Production"
+        required: true
+        type: choice
+        options:
+          - "no"
+          - "yes"
+        default: "no"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-promote:
+    name: Validate and Promote
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check deployment confirmation
+        if: ${{ inputs.confirm_deployment != 'yes' }}
+        run: |
+          echo "Production promotion was not confirmed."
+          exit 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run backend tests
+        run: |
+          cd backend
+          PYTHONPATH=. pytest -q
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Build production Docker image
+        run: |
+          docker build -t stylematch:production .
+
+      - name: Promotion completed
+        run: |
+          echo "Validation passed."
+          echo "Production Docker image built successfully."
