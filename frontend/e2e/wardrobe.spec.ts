@@ -10,20 +10,19 @@ test.describe('StyleMatch E2E Tests', () => {
 
   test('2. User can open My Wardrobe', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: /My Wardrobe/i }).click();
+    await page.getByRole('button', { name: /My Wardrobe/i }).first().click();
     await expect(page.getByRole('heading', { name: /My wardrobe/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Add a piece/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add a piece', exact: true })).toBeVisible();
   });
 
   test('3. User can add clothing', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: /My Wardrobe/i }).click();
-    await page.getByRole('button', { name: /Add a piece/i }).click();
-
+    await page.getByRole('button', { name: /My Wardrobe/i }).first().click();
+    await page.getByRole('button', { name: 'Add a piece', exact: true }).click();
     const itemName = `E2E Shirt ${Date.now()}`;
 
     await page.getByPlaceholder('e.g. Linen white shirt').fill(itemName);
-    await page.getByLabel('CATEGORY').selectOption('top');
+    await page.getByLabel('CATEGORY', { exact: true }).selectOption('top');
     await page.getByPlaceholder('e.g. Ivory').fill('White');
 
     await page.getByRole('button', { name: /Add to wardrobe/i }).click();
@@ -33,13 +32,13 @@ test.describe('StyleMatch E2E Tests', () => {
 
   test('4. User can delete clothing', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: /My Wardrobe/i }).click();
-    await page.getByRole('button', { name: /Add a piece/i }).click();
+    await page.getByRole('button', { name: /My Wardrobe/i }).first().click();
+    await page.getByRole('button', { name: 'Add a piece', exact: true }).click();
 
     const itemName = `E2E Delete ${Date.now()}`;
 
     await page.getByPlaceholder('e.g. Linen white shirt').fill(itemName);
-    await page.getByLabel('CATEGORY').selectOption('top');
+    await page.getByLabel('CATEGORY', { exact: true }).selectOption('top');
     await page.getByPlaceholder('e.g. Ivory').fill('Black');
     await page.getByRole('button', { name: /Add to wardrobe/i }).click();
 

@@ -20,7 +20,14 @@ from .schemas import (
     Recommendation,
     RecommendationRequest,
 )
+from prometheus_client import make_asgi_app
 
+from opentelemetry import metrics
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.exporter.prometheus import PrometheusMetricReader
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -36,7 +43,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# OpenTelemetry metrics
+resource = Resource.create({
+    "service.name": "stylematch-api"
+})
 
+prometheus_reader = PrometheusMetricReader()
+
+provider = MeterProvider(
+    resource=resource,
+    metric_readers=[prometheus_reader],
+)
+
+metrics.set_meter_provider(provider)
+
+# Instrument FastAPI
+FastAPIInstrumentor.instrument_app(app)
+
+# Prometheus metrics endpoint
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app, name="metrics")
 
 def outfit_out(outfit: Outfit) -> OutfitOut:
     return OutfitOut(
